@@ -1,40 +1,33 @@
-import torch
-import torch.nn as nn
-import torch.optim as optim
-from sklearn.model_selection import train_test_split
 import glob
 import pandas as pd
 import numpy as np
 
+import torch
+import torch.nn as nn
+import torch.optim as optim
+
+from sklearn.model_selection import train_test_split
+
 # Step 0: Specify Dataset Directories and methods for importing the data
 csv_path = r"A:\ML_start\pointcloud_proj\raw\csv\*.csv"
 txt_path = r"A:\ML_start\pointcloud_proj\raw\txt\*.txt"
+csv_files = sorted(glob.glob(csv_path), key=lambda x: int(''.join(filter(str.isdigit, x))))
+txt_files = sorted(glob.glob(txt_path), key=lambda x: int(''.join(filter(str.isdigit, x))))
 
 def load_csv_data(file_path):
-    data = pd.read_csv(file_path)
-    pvals= data["P"].values
-    cvals= data["Cd"].values
-    print("csv data", pvals[0])
+    data = np.genfromtxt(file_path, delimiter=',', skip_header=True)
+    # Extract the x, y, z, r, g, and b attributes
+    x = data[:, 0]
+    y = data[:, 1]
+    z = data[:, 2]
+    r = data[:, 3]
+    g = data[:, 4]
+    b = data[:, 5]
 
-    # Remove parentheses and split the string into individual values
-    pSplits = pvals.split(',')
-    # Convert string values to floating-point numbers
-    position_values = [float(value) for value in pSplits]
-    # Create a NumPy array from the float values
-    position_numpy_vector = np.array(position_values)
-
-    #Do the same for colors
-
-    cSplits = cvals.split(",")
-    color_values = [float(value) for value in cSplits]
-    color_numpy_vector = np.array(color_values)
-
-
-
-
-
+    # print("values:",x,y,z,r,g,b)
     # coordinates = [float(val) for val in line.split(",")]
-    return position_numpy_vector, color_numpy_vector
+    # return position_numpy_vector, color_numpy_vector
+    return x,y,z,r,g,b
 
 def load_txt_data(file_path):
     with open(file_path, 'r') as file:
@@ -42,17 +35,25 @@ def load_txt_data(file_path):
         coordinates = [float(val) for val in line.split(",")]
     return np.array(coordinates)
 
-csv_files = sorted(glob.glob(csv_path), key=lambda x: int(''.join(filter(str.isdigit, x))))
-txt_files = sorted(glob.glob(txt_path), key=lambda x: int(''.join(filter(str.isdigit, x))))
+
 
 X_train = []
 y_train = []
 
 for csv_file, txt_file in zip(csv_files, txt_files):
-    P, Cd = load_csv_data(csv_file)
-    P = np.array(P, dtype=np.float32)
-    Cd = np.array(Cd, dtype=np.float32)
-    X_train.append(np.column_stack((P, Cd)))
+    # P, Cd = load_csv_data(csv_file)
+    # P = np.array(P, dtype=np.float32)
+    # Cd = np.array(Cd, dtype=np.float32)
+    # X_train.append(np.column_stack((P, Cd)))
+    x,y,z,r,g,b = load_csv_data(csv_file)
+    x = np.array(x, dtype=np.float32)
+    y = np.array(y, dtype=np.float32)
+    z = np.array(z, dtype=np.float32)
+    r = np.array(r, dtype=np.float32)
+    g = np.array(g, dtype=np.float32)
+    b = np.array(b, dtype=np.float32)
+    X_train.append(np.column_stack((x,y,z,r,g,b)))
+
     
     seed_vector = load_txt_data(txt_file)
     y_train.append(seed_vector)
